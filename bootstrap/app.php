@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [ApiAuditMiddleware::class]);
         $middleware->alias(['admin' => AdminOnly::class]);
     })
+    ->withCommands()
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
