@@ -28,7 +28,7 @@ class TelegramWebhookController extends Controller
         $secret = config('services.telegram.webhook_secret');
 
         if (! $secret) {
-            return true;
+            return app()->environment('local', 'testing');
         }
 
         $token = $request->header('X-Telegram-Bot-Api-Secret-Token');
