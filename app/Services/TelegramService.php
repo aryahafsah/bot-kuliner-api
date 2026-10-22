@@ -12,7 +12,7 @@ class TelegramService
 
     private string $baseUrl;
 
-    public function __construct()
+    public function __construct(private RestaurantService $restaurantService)
     {
         $this->botToken = config('services.telegram.bot_token');
         $this->baseUrl = 'https://api.telegram.org/bot'.$this->botToken;
@@ -78,16 +78,48 @@ class TelegramService
 
     private function handleText(int $chatId, string $text): void
     {
-        $response = "You searched: {$text}. Restaurant search feature available via API.";
-        $this->sendMessage($chatId, $response);
+        $restaurants = $this->restaurantService->search(['q' => trim($text)]);
+
+        if ($restaurants === []) {
+            $this->sendMessage($chatId, "Restoran tidak ditemukan untuk: {$text}");
+
+            return;
+        }
+
+        $lines = ["Hasil restoran untuk: {$text}", ''];
+
+        foreach (array_slice($restaurants, 0, 10) as $index => $restaurant) {
+            $number = $index + 1;
+            $name = $restaurant['nama_restoran'] ?? $restaurant['name'] ?? 'Tanpa nama';
+            $address = $restaurant['alamat'] ?? $restaurant['address'] ?? 'Alamat tidak tersedia';
+            $category = $restaurant['kategori'] ?? $restaurant['category'] ?? 'Kategori tidak tersedia';
+            $lines[] = "{$number}. {$name}";
+            $lines[] = "   {$address}";
+            $lines[] = "   Kategori: {$category}";
+            $lines[] = '';
+        }
+
+        if (count($restaurants) > 10) {
+            $lines[] = 'Menampilkan 10 hasil pertama.';
+        }
+
+        $this->sendMessage($chatId, implode("\n", $lines));
     }
 
     private function handleLocation(int $chatId, array $location): void
     {
         $lat = $location['latitude'] ?? 0;
         $lon = $location['longitude'] ?? 0;
-        $response = "Location received: {$lat}, {$lon}. Nearby restaurant search available via API.";
-        $this->sendMessage($chatId, $response);
+        $restaurants = $this->restaurantService->search([]);
+        $lines = ["Lokasi diterima: {$lat}, {$lon}", 'Restoran tersedia:'];
+
+        foreach (array_slice($restaurants, 0, 10) as $index => $restaurant) {
+            $name = $restaurant['nama_restoran'] ?? 'Tanpa nama';
+            $address = $restaurant['alamat'] ?? 'Alamat tidak tersedia';
+            $lines[] = ($index + 1).". {$name} - {$address}";
+        }
+
+        $this->sendMessage($chatId, implode("\n", $lines));
     }
 
     public function sendMessage(int $chatId, string $text): void
