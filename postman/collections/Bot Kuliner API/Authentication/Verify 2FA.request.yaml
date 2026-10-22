@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/auth/2fa/verify"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "user_id": "{{user_id}}",
+      "code": "123456"
+    }
+order: 4000

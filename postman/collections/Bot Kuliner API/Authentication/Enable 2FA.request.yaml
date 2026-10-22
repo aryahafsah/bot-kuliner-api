@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/auth/2fa/enable"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+order: 3000

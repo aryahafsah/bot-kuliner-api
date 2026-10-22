@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/auth/2fa/disable"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "password": "password123"
+    }
+order: 5000

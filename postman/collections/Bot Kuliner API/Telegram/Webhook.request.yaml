@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/telegram/webhook"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "update_id": 123456,
+      "message": {
+        "message_id": 1,
+        "chat": {"id": 123456789},
+        "date": 1234567890,
+        "text": "nasi goreng"
+      }
+    }
+order: 1000

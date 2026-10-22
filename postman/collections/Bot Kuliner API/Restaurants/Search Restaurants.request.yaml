@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{base_url}}/restaurants?q=nasi&city=jakarta"
+method: GET
+headers:
+  Authorization: Bearer {{access_token}}
+queryParams:
+  q: nasi
+  city: jakarta
+order: 1000

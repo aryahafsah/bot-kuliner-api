@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{base_url}}/admin/audit-logs?per_page=20"
+method: GET
+headers:
+  Authorization: Bearer {{access_token}}
+queryParams:
+  per_page: "20"
+order: 1000

@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{base_url}}/restaurants/{{restaurant_id}}/reviews"
+method: GET
+headers:
+  Authorization: Bearer {{access_token}}
+order: 4000

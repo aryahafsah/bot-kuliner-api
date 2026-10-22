@@ -1,0 +1,7 @@
+$kind: collection
+description: RESTful API untuk Bot Telegram Kuliner dengan Laravel
+variables:
+  base_url: http://localhost:8000/api
+  access_token: ""
+  user_id: ""
+  restaurant_id: dummy-1
