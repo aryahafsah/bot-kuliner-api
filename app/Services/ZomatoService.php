@@ -10,12 +10,13 @@ class ZomatoService implements RestaurantProvider
     public function search(array $filters): array
     {
         if (! config('services.zomato.api_key')) {
-            return $this->dummySearch($filters);
+            return $this->datasetSearch($filters);
         }
 
-        $response = Http::withHeaders([
-            'X-RapidAPI-Key' => config('services.zomato.api_key'),
-        ])->timeout(10)->get(config('services.zomato.base_url').'/search', $filters);
+        $response = Http::withToken(config('services.zomato.api_key'))
+            ->acceptJson()
+            ->timeout(10)
+            ->get(config('services.zomato.base_url').'/search', $filters);
 
         return $response->successful() ? $response->json('restaurants', []) : [];
     }
@@ -23,51 +24,61 @@ class ZomatoService implements RestaurantProvider
     public function find(string $id): ?array
     {
         if (! config('services.zomato.api_key')) {
-            return collect($this->dummySearch([]))->firstWhere('id', $id);
+            return collect($this->loadDataset())->firstWhere('id', $id);
         }
 
-        $response = Http::withHeaders([
-            'X-RapidAPI-Key' => config('services.zomato.api_key'),
-        ])->timeout(10)->get(config('services.zomato.base_url').'/restaurant', ['id' => $id]);
+        $response = Http::withToken(config('services.zomato.api_key'))
+            ->acceptJson()
+            ->timeout(10)
+            ->get(config('services.zomato.base_url').'/restaurant', ['id' => $id]);
 
         return $response->successful() ? $response->json() : null;
     }
 
     public function menu(string $id): array
     {
-        return [];
+        return $this->find($id)['menu'] ?? [];
     }
 
     public function reviews(string $id): array
     {
-        return [];
+        return $this->find($id)['review'] ?? [];
     }
 
-    private function dummySearch(array $filters): array
+    private function datasetSearch(array $filters): array
     {
-        $restaurants = [
-            [
-                'id' => 'dummy-1',
-                'name' => 'Warung Nusantara',
-                'address' => 'Jakarta',
-                'rating' => 4.5,
-                'category' => 'Indonesian',
-            ],
-            [
-                'id' => 'dummy-2',
-                'name' => 'Sate Makmur',
-                'address' => 'Bandung',
-                'rating' => 4.2,
-                'category' => 'Satay',
-            ],
-        ];
+        $query = strtolower((string) ($filters['q'] ?? ''));
+        $city = strtolower((string) ($filters['city'] ?? ''));
+        $category = strtolower((string) ($filters['category'] ?? ''));
 
-        return collect($restaurants)->filter(function (array $restaurant) use ($filters): bool {
-            $query = strtolower((string) ($filters['q'] ?? ''));
-            $city = strtolower((string) ($filters['city'] ?? ''));
+        return collect($this->loadDataset())
+            ->filter(function (array $restaurant) use ($query, $city, $category): bool {
+                $name = strtolower((string) ($restaurant['nama_restoran'] ?? ''));
+                $address = strtolower((string) ($restaurant['alamat'] ?? ''));
+                $searchCity = strtolower((string) ($restaurant['kota_pencarian'] ?? ''));
+                $restaurantCategory = strtolower((string) ($restaurant['kategori'] ?? ''));
+                $cuisine = strtolower((string) ($restaurant['jenis_masakan'] ?? ''));
 
-            return ($query === '' || str_contains(strtolower($restaurant['name']), $query))
-                && ($city === '' || strtolower($restaurant['address']) === $city);
-        })->values()->all();
+                return ($query === '' || str_contains($name, $query) || str_contains($cuisine, $query))
+                    && ($city === '' || str_contains($searchCity, $city) || str_contains($address, $city))
+                    && ($category === '' || str_contains($restaurantCategory, $category) || str_contains($cuisine, $category));
+            })
+            ->values()
+            ->all();
+    }
+
+    private function loadDataset(): array
+    {
+        static $dataset;
+
+        if ($dataset !== null) {
+            return $dataset;
+        }
+
+        $path = database_path('data/restoran.json');
+        $contents = is_file($path) ? file_get_contents($path) : false;
+        $decoded = $contents === false ? [] : json_decode($contents, true);
+
+        return $dataset = is_array($decoded['restoran'] ?? null) ? $decoded['restoran'] : [];
     }
 }
