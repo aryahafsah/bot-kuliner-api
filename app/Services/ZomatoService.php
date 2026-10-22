@@ -37,12 +37,49 @@ class ZomatoService implements RestaurantProvider
 
     public function menu(string $id): array
     {
-        return $this->find($id)['menu'] ?? [];
+        $restaurant = $this->find($id);
+
+        if (! $restaurant) {
+            return [];
+        }
+
+        if (! empty($restaurant['menu']) && is_array($restaurant['menu'])) {
+            return $restaurant['menu'];
+        }
+
+        $name = $restaurant['nama_restoran'] ?? 'Restoran';
+        $cuisine = $restaurant['jenis_masakan'] ?? 'Indonesia';
+
+        return [
+            [
+                'name' => 'Menu demo '.$name,
+                'description' => 'Contoh menu '.$cuisine.' untuk keperluan pengujian API.',
+                'price' => null,
+                'source' => 'demo',
+            ],
+        ];
     }
 
     public function reviews(string $id): array
     {
-        return $this->find($id)['review'] ?? [];
+        $restaurant = $this->find($id);
+
+        if (! $restaurant) {
+            return [];
+        }
+
+        if (! empty($restaurant['review']) && is_array($restaurant['review'])) {
+            return $restaurant['review'];
+        }
+
+        return [
+            [
+                'author' => 'Demo User',
+                'rating' => null,
+                'text' => 'Contoh ulasan untuk keperluan pengujian API.',
+                'source' => 'demo',
+            ],
+        ];
     }
 
     private function datasetSearch(array $filters): array
