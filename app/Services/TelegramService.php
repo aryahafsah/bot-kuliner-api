@@ -72,7 +72,10 @@ class TelegramService
         match ($messageType) {
             'text' => $this->handleText($chatId, $message['text']),
             'location' => $this->handleLocation($chatId, $message['location']),
-            default => $this->sendMessage($chatId, 'Message type received: '.$messageType),
+            'contact' => $this->handleContact($chatId, $message['contact']),
+            'photo' => $this->handlePhoto($chatId, $message['photo']),
+            'video' => $this->handleVideo($chatId, $message['video']),
+            default => $this->sendMessage($chatId, 'Jenis pesan belum didukung.'),
         };
     }
 
@@ -120,6 +123,22 @@ class TelegramService
         }
 
         $this->sendMessage($chatId, implode("\n", $lines));
+    }
+
+    private function handleContact(int $chatId, array $contact): void
+    {
+        $name = $contact['first_name'] ?? 'pengguna';
+        $this->sendMessage($chatId, "Kontak {$name} diterima. Data kontak hanya dicatat sebagai metadata.");
+    }
+
+    private function handlePhoto(int $chatId, array $photos): void
+    {
+        $this->sendMessage($chatId, 'Foto diterima. Metadata file sudah dicatat; analisis gambar belum dilakukan.');
+    }
+
+    private function handleVideo(int $chatId, array $video): void
+    {
+        $this->sendMessage($chatId, 'Video diterima. Metadata file sudah dicatat; analisis video belum dilakukan.');
     }
 
     public function sendMessage(int $chatId, string $text): void
